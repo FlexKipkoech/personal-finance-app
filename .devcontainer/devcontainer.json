@@ -28,7 +28,7 @@
 
   "forwardPorts": [8080, 5037],
   
-  "postCreateCommand": "sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0'",
+  "postCreateCommand": "yes | sdkmanager --licenses && sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0'",
   
   "remoteUser": "vscode"
 }
