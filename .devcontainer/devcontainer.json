@@ -1,15 +1,6 @@
 {
   "name": "Android Finance App",
-  "image": "mcr.microsoft.com/devcontainers/java:17",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/android-sdk:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/gradle:1": {
-      "version": "latest"
-    }
-  },
+  "image": "mcr.microsoft.com/devcontainers/java:17-bullseye",
 
   "customizations": {
     "vscode": {
@@ -17,18 +8,14 @@
         "GitHub.copilot",
         "GitHub.copilot-chat",
         "mathiasfrohlich.Kotlin",
-        "fwcd.kotlin",
-        "vscjava.vscode-gradle"
-      ],
-      "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
-      }
+        "fwcd.kotlin"
+      ]
     }
   },
 
-  "forwardPorts": [8080, 5037],
-  
-  "postCreateCommand": "yes | sdkmanager --licenses && sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0'",
-  
+  "forwardPorts": [8080],
+
+  "postCreateCommand": "bash .devcontainer/setup-android.sh",
+
   "remoteUser": "vscode"
 }
