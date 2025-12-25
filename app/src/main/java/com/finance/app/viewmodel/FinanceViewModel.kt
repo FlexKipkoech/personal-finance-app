@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.finance.app.data.database.FinanceDatabase
+import com.finance.app.data.firebase.FirebaseManager
 import com.finance.app.data.models.Budget
 import com.finance.app.data.models.Category
 import com.finance.app.data.models.Transaction
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class FinanceViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: FinanceRepository
+    private val firebaseManager = FirebaseManager()
     
     val allTransactions: StateFlow<List<Transaction>>
     val allBudgets: StateFlow<List<Budget>>
@@ -51,6 +53,12 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         
         calculateMonthlyTotals()
+
+        viewModelScope.launch {
+            if (!firebaseManager.isUserSignedIn()) {
+                firebaseManager.signInAnonymously()
+            }
+        }
     }
 
     private fun calculateMonthlyTotals() {
@@ -99,6 +107,20 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun syncTransactionToCloud(transaction: Transaction) {
+        viewModelScope.launch {
+            val result = firebaseManager.syncTransaction(transaction)
+            if (result.isSuccess) {
+                val firebaseId = result.getOrNull()
+                if (firebaseId != null && transaction.firebaseId == null) {
+                    repository.updateTransaction(
+                        transaction.copy(firebaseId = firebaseId, synced = true)
+                    )
+                }
+            }
+        }
+    }
+
     // Budget Operations
     fun addBudget(budget: Budget) {
         viewModelScope.launch {
@@ -115,6 +137,36 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             repository.deleteBudget(budget)
+        }
+    }
+
+    fun syncBudgetToCloud(budget: Budget) {
+        viewModelScope.launch {
+            val result = firebaseManager.syncBudget(budget)
+            if (result.isSuccess) {
+                val firebaseId = result.getOrNull()
+                if (firebaseId != null && budget.firebaseId == null) {
+                    repository.updateBudget(
+                        budget.copy(firebaseId = firebaseId)
+                    )
+                }
+            }
+        }
+    }
+
+    fun syncAllToCloud() {
+        viewModelScope.launch {
+            allTransactions.value.forEach { transaction ->
+                if (!transaction.synced) {
+                    syncTransactionToCloud(transaction)
+                }
+            }
+
+            allBudgets.value.forEach { budget ->
+                if (budget.firebaseId == null) {
+                    syncBudgetToCloud(budget)
+                }
+            }
         }
     }
 
