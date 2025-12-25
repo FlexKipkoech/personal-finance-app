@@ -92,7 +92,7 @@ class FirebaseManager {
     }
 
     // Fetch from cloud
-    suspend fun fetchTransactions(): Result<List<Map<String, Any>>> {
+    suspend fun fetchTransactions(): Result<List<Map<String, Any?>>> {
         return try {
             val userId = getCurrentUserId() ?: return Result.failure(Exception("User not signed in"))
 

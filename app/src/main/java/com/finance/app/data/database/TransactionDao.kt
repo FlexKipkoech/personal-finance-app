@@ -27,6 +27,17 @@ interface TransactionDao {
     @Query("SELECT SUM(amount) FROM transactions WHERE type = :type AND date BETWEEN :startDate AND :endDate")
     suspend fun getTotalByTypeAndDateRange(type: TransactionType, startDate: Long, endDate: Long): Double?
 
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = :type AND category = :category AND date BETWEEN :startDate AND :endDate")
+    suspend fun getTotalByTypeCategoryAndDateRange(
+        type: TransactionType,
+        category: String,
+        startDate: Long,
+        endDate: Long
+    ): Double?
+
+    @Query("SELECT * FROM transactions WHERE firebaseId = :firebaseId LIMIT 1")
+    suspend fun getTransactionByFirebaseId(firebaseId: String): Transaction?
+
     @Query("SELECT category, SUM(amount) as total FROM transactions WHERE type = :type AND date BETWEEN :startDate AND :endDate GROUP BY category")
     suspend fun getCategoryTotals(type: TransactionType, startDate: Long, endDate: Long): List<CategoryTotal>
 

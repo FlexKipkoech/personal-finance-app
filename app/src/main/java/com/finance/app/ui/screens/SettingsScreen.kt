@@ -26,11 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.finance.app.viewmodel.FinanceViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(viewModel: FinanceViewModel) {
     var syncing by remember { mutableStateOf(false) }
     var syncMessage by remember { mutableStateOf("") }
+    val scope = remember { CoroutineScope(Dispatchers.Main) }
 
     LazyColumn(
         modifier = Modifier
@@ -67,9 +71,15 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                     Button(
                         onClick = {
                             syncing = true
-                            viewModel.syncAllToCloud()
-                            syncMessage = "Data synced successfully!"
-                            syncing = false
+                            syncMessage = ""
+                            scope.launch {
+                                val result = viewModel.syncAll()
+                                syncing = false
+                                syncMessage = result.fold(
+                                    onSuccess = { "Data synced successfully." },
+                                    onFailure = { "Sync failed: ${'$'}{it.message}" }
+                                )
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !syncing

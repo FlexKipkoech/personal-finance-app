@@ -19,6 +19,7 @@ import com.finance.app.ui.navigation.NavGraph
 import com.finance.app.ui.navigation.bottomNavItems
 import com.finance.app.ui.theme.PersonalFinanceAppTheme
 import com.finance.app.viewmodel.FinanceViewModel
+import com.finance.app.viewmodel.FinanceViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PersonalFinanceAppTheme {
                 val navController = rememberNavController()
-                val viewModel: FinanceViewModel = viewModel()
+                val viewModel: FinanceViewModel = viewModel(factory = FinanceViewModelFactory(application))
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 

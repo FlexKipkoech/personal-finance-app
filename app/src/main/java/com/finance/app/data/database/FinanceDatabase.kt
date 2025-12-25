@@ -31,21 +31,22 @@ abstract class FinanceDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): FinanceDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                lateinit var instance: FinanceDatabase
+                val callback = object : RoomDatabase.Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            populateDatabase(instance.categoryDao())
+                        }
+                    }
+                }
+
+                instance = Room.databaseBuilder(
                     context.applicationContext,
                     FinanceDatabase::class.java,
                     "finance_database"
                 )
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            INSTANCE?.let { database ->
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    populateDatabase(database.categoryDao())
-                                }
-                            }
-                        }
-                    })
+                    .addCallback(callback)
                     .build()
                 INSTANCE = instance
                 instance

@@ -40,6 +40,16 @@ class FinanceRepository(
         endDate: Long
     ): Double = transactionDao.getTotalByTypeAndDateRange(type, startDate, endDate) ?: 0.0
 
+    suspend fun getTotalByTypeCategoryAndDateRange(
+        type: TransactionType,
+        category: String,
+        startDate: Long,
+        endDate: Long
+    ): Double = transactionDao.getTotalByTypeCategoryAndDateRange(type, category, startDate, endDate) ?: 0.0
+
+    suspend fun getTransactionByFirebaseId(firebaseId: String): Transaction? =
+        transactionDao.getTransactionByFirebaseId(firebaseId)
+
     suspend fun getCategoryTotals(
         type: TransactionType,
         startDate: Long,

@@ -97,6 +97,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             repository.updateTransaction(transaction)
             calculateMonthlyTotals()
+            updateBudgetSpending(transaction.category)
         }
     }
 
@@ -104,20 +105,23 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             repository.deleteTransaction(transaction)
             calculateMonthlyTotals()
+            updateBudgetSpending(transaction.category)
         }
     }
 
-    fun syncTransactionToCloud(transaction: Transaction) {
-        viewModelScope.launch {
-            val result = firebaseManager.syncTransaction(transaction)
-            if (result.isSuccess) {
-                val firebaseId = result.getOrNull()
-                if (firebaseId != null && transaction.firebaseId == null) {
-                    repository.updateTransaction(
-                        transaction.copy(firebaseId = firebaseId, synced = true)
-                    )
-                }
+    suspend fun syncTransactionToCloud(transaction: Transaction) {
+        val result = firebaseManager.syncTransaction(transaction)
+        if (result.isSuccess) {
+            val firebaseId = result.getOrNull()
+            val updatedFirebaseId = firebaseId ?: transaction.firebaseId
+
+            if (updatedFirebaseId != null) {
+                repository.updateTransaction(
+                    transaction.copy(firebaseId = updatedFirebaseId, synced = true)
+                )
             }
+        } else {
+            throw result.exceptionOrNull() ?: Exception("Unknown sync error")
         }
     }
 
@@ -125,12 +129,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun addBudget(budget: Budget) {
         viewModelScope.launch {
             repository.insertBudget(budget)
+            updateBudgetSpending(budget.category)
         }
     }
 
     fun updateBudget(budget: Budget) {
         viewModelScope.launch {
             repository.updateBudget(budget)
+            updateBudgetSpending(budget.category)
         }
     }
 
@@ -140,33 +146,39 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun syncBudgetToCloud(budget: Budget) {
-        viewModelScope.launch {
-            val result = firebaseManager.syncBudget(budget)
-            if (result.isSuccess) {
-                val firebaseId = result.getOrNull()
-                if (firebaseId != null && budget.firebaseId == null) {
-                    repository.updateBudget(
-                        budget.copy(firebaseId = firebaseId)
-                    )
-                }
+    suspend fun syncBudgetToCloud(budget: Budget) {
+        val result = firebaseManager.syncBudget(budget)
+        if (result.isSuccess) {
+            val firebaseId = result.getOrNull()
+            val updatedFirebaseId = firebaseId ?: budget.firebaseId
+
+            if (updatedFirebaseId != null) {
+                repository.updateBudget(
+                    budget.copy(firebaseId = updatedFirebaseId)
+                )
+            }
+        } else {
+            throw result.exceptionOrNull() ?: Exception("Unknown sync error")
+        }
+    }
+
+    suspend fun syncAll(): Result<Unit> = runCatching {
+        allTransactions.value.forEach { transaction ->
+            if (!transaction.synced) {
+                syncTransactionToCloud(transaction)
+            }
+        }
+
+        allBudgets.value.forEach { budget ->
+            if (budget.firebaseId == null) {
+                syncBudgetToCloud(budget)
             }
         }
     }
 
     fun syncAllToCloud() {
         viewModelScope.launch {
-            allTransactions.value.forEach { transaction ->
-                if (!transaction.synced) {
-                    syncTransactionToCloud(transaction)
-                }
-            }
-
-            allBudgets.value.forEach { budget ->
-                if (budget.firebaseId == null) {
-                    syncBudgetToCloud(budget)
-                }
-            }
+            syncAll()
         }
     }
 
@@ -175,15 +187,15 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             val startOfMonth = DateUtils.getStartOfMonth()
             val endOfMonth = DateUtils.getEndOfMonth()
             
-            val spent = repository.getTotalByTypeAndDateRange(
+            val spentForCategory = repository.getTotalByTypeCategoryAndDateRange(
                 TransactionType.EXPENSE,
+                category,
                 startOfMonth,
                 endOfMonth
             )
-            
-            // Update budget if exists
+
             allBudgets.value.find { it.category == category }?.let { budget ->
-                repository.updateBudgetSpent(budget.id, spent)
+                repository.updateBudgetSpent(budget.id, spentForCategory)
             }
         }
     }
