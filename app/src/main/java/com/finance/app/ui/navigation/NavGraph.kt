@@ -15,11 +15,13 @@ import com.finance.app.viewmodel.FinanceViewModel
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    viewModel: FinanceViewModel
+    viewModel: FinanceViewModel,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Home.route,
+        modifier = modifier
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
