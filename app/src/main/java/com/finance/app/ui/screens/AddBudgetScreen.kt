@@ -36,6 +36,7 @@ import com.finance.app.data.models.Budget
 import com.finance.app.data.models.BudgetPeriod
 import com.finance.app.data.models.TransactionType
 import com.finance.app.utils.DateUtils
+import com.finance.app.utils.categoryIconToEmoji
 import com.finance.app.viewmodel.FinanceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +95,7 @@ fun AddBudgetScreen(
                 ) {
                     categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text("${'$'}{category.icon} ${'$'}{category.name}") },
+                            text = { Text("${'$'}{categoryIconToEmoji(category.icon)} ${'$'}{category.name}") },
                             onClick = {
                                 selectedCategory = category.name
                                 expandedCategory = false

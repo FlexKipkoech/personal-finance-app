@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +32,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(viewModel: FinanceViewModel) {
+fun SettingsScreen(
+    viewModel: FinanceViewModel,
+    onNavigateToLogin: () -> Unit,
+    onSignedOut: () -> Unit
+) {
     var syncing by remember { mutableStateOf(false) }
     var syncMessage by remember { mutableStateOf("") }
     val scope = remember { CoroutineScope(Dispatchers.Main) }
+    val isSignedIn by viewModel.isSignedIn.collectAsState()
+    val isAnonymous = viewModel.isAnonymousUser()
+    val email = viewModel.getCurrentUserEmail()
 
     LazyColumn(
         modifier = Modifier
@@ -48,6 +56,53 @@ fun SettingsScreen(viewModel: FinanceViewModel) {
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Account",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    val statusText = when {
+                        !isSignedIn -> "Not signed in"
+                        isAnonymous -> "Signed in as guest"
+                        !email.isNullOrBlank() -> "Signed in as ${'$'}email"
+                        else -> "Signed in"
+                    }
+
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (!isSignedIn || isAnonymous) {
+                        Button(
+                            onClick = onNavigateToLogin,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Login / Sign up")
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                viewModel.signOut()
+                                onSignedOut()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Sign out")
+                        }
+                    }
+                }
+            }
         }
 
         item {

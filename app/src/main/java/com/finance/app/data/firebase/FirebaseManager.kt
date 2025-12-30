@@ -4,6 +4,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.finance.app.data.models.Transaction
 import com.finance.app.data.models.Budget
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.tasks.await
 
 class FirebaseManager {
@@ -20,9 +24,48 @@ class FirebaseManager {
         }
     }
 
+    suspend fun signInWithEmailPassword(email: String, password: String): Result<Unit> {
+        return try {
+            auth.signInWithEmailAndPassword(email.trim(), password).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signUpWithEmailPassword(email: String, password: String): Result<Unit> {
+        return try {
+            auth.createUserWithEmailAndPassword(email.trim(), password).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun signOut() {
+        auth.signOut()
+    }
+
     fun getCurrentUserId(): String? = auth.currentUser?.uid
 
+    fun getCurrentUserEmail(): String? = auth.currentUser?.email
+
+    fun isAnonymousUser(): Boolean = auth.currentUser?.isAnonymous == true
+
     fun isUserSignedIn(): Boolean = auth.currentUser != null
+
+    fun authStateFlow(): Flow<Boolean> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            trySend(firebaseAuth.currentUser != null).isSuccess
+        }
+
+        auth.addAuthStateListener(listener)
+        trySend(auth.currentUser != null).isSuccess
+
+        awaitClose {
+            auth.removeAuthStateListener(listener)
+        }
+    }.distinctUntilChanged()
 
     // Sync Transactions
     suspend fun syncTransaction(transaction: Transaction): Result<String> {

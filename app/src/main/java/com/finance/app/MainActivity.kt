@@ -16,6 +16,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.finance.app.ui.navigation.NavGraph
+import com.finance.app.ui.navigation.Screen
 import com.finance.app.ui.navigation.bottomNavItems
 import com.finance.app.ui.theme.PersonalFinanceAppTheme
 import com.finance.app.viewmodel.FinanceViewModel
@@ -30,27 +31,35 @@ class MainActivity : ComponentActivity() {
                 val viewModel: FinanceViewModel = viewModel(factory = FinanceViewModelFactory(application))
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
+                val hideBottomBarRoutes = setOf(
+                    Screen.Login.route,
+                    Screen.SignUp.route
+                )
 
                 Scaffold(
                     bottomBar = {
-                        NavigationBar {
-                            bottomNavItems.forEach { item ->
-                                NavigationBarItem(
-                                    icon = { Icon(item.icon, contentDescription = item.label) },
-                                    label = { Text(item.label) },
-                                    selected = currentDestination?.hierarchy?.any {
-                                        it.route == item.screen.route
-                                    } == true,
-                                    onClick = {
-                                        navController.navigate(item.screen.route) {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                saveState = true
+                        val shouldShowBottomBar = currentDestination?.route !in hideBottomBarRoutes
+
+                        if (shouldShowBottomBar) {
+                            NavigationBar {
+                                bottomNavItems.forEach { item ->
+                                    NavigationBarItem(
+                                        icon = { Icon(item.icon, contentDescription = item.label) },
+                                        label = { Text(item.label) },
+                                        selected = currentDestination?.hierarchy?.any {
+                                            it.route == item.screen.route
+                                        } == true,
+                                        onClick = {
+                                            navController.navigate(item.screen.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
-                                            launchSingleTop = true
-                                            restoreState = true
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 class FinanceViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: FinanceRepository
     private val firebaseManager = FirebaseManager()
+
+    val isSignedIn: StateFlow<Boolean>
     
     val allTransactions: StateFlow<List<Transaction>>
     val allBudgets: StateFlow<List<Budget>>
@@ -42,6 +44,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             database.budgetDao(),
             database.categoryDao()
         )
+
+        isSignedIn = firebaseManager.authStateFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), firebaseManager.isUserSignedIn())
         
         allTransactions = repository.getAllTransactions()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -59,6 +64,20 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 firebaseManager.signInAnonymously()
             }
         }
+    }
+
+    fun getCurrentUserEmail(): String? = firebaseManager.getCurrentUserEmail()
+
+    fun isAnonymousUser(): Boolean = firebaseManager.isAnonymousUser()
+
+    suspend fun signIn(email: String, password: String): Result<Unit> =
+        firebaseManager.signInWithEmailPassword(email, password)
+
+    suspend fun signUp(email: String, password: String): Result<Unit> =
+        firebaseManager.signUpWithEmailPassword(email, password)
+
+    fun signOut() {
+        firebaseManager.signOut()
     }
 
     private fun calculateMonthlyTotals() {

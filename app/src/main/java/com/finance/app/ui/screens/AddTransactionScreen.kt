@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.finance.app.data.models.Transaction
 import com.finance.app.data.models.TransactionType
+import com.finance.app.utils.categoryIconToEmoji
 import com.finance.app.viewmodel.FinanceViewModel
 import java.util.Date
 
@@ -129,7 +130,7 @@ fun AddTransactionScreen(
                 ) {
                     categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text("${'$'}{category.icon} ${'$'}{category.name}") },
+                            text = { Text("${'$'}{categoryIconToEmoji(category.icon)} ${'$'}{category.name}") },
                             onClick = {
                                 selectedCategory = category.name
                                 expandedCategory = false
