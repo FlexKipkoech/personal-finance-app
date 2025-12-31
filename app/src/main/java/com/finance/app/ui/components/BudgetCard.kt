@@ -106,20 +106,21 @@ fun BudgetCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Spent: ${'$'}{CurrencyUtils.formatAmount(budget.spent)}",
+                    text = "Spent: ${CurrencyUtils.formatAmount(budget.spent)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isOverBudget) Expense else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Limit: ${'$'}{CurrencyUtils.formatAmount(budget.amount)}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Limit: ${CurrencyUtils.formatAmount(budget.amount)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (isOverBudget) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "⚠️ Over budget by ${'$'}{CurrencyUtils.formatAmount(budget.spent - budget.amount)}",
+                    text = "⚠️ Over budget by ${CurrencyUtils.formatAmount(budget.spent - budget.amount)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold
@@ -128,7 +129,7 @@ fun BudgetCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 val remaining = budget.amount - budget.spent
                 Text(
-                    text = "⚠️ Only ${'$'}{CurrencyUtils.formatAmount(remaining)} remaining",
+                    text = "⚠️ Only ${CurrencyUtils.formatAmount(remaining)} remaining",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.tertiary,
                     fontWeight = FontWeight.Bold

@@ -73,7 +73,7 @@ fun SettingsScreen(
                     val statusText = when {
                         !isSignedIn -> "Not signed in"
                         isAnonymous -> "Signed in as guest"
-                        !email.isNullOrBlank() -> "Signed in as ${'$'}email"
+                        !email.isNullOrBlank() -> "Signed in as $email"
                         else -> "Signed in"
                     }
 
@@ -132,7 +132,7 @@ fun SettingsScreen(
                                 syncing = false
                                 syncMessage = result.fold(
                                     onSuccess = { "Data synced successfully." },
-                                    onFailure = { "Sync failed: ${'$'}{it.message}" }
+                                    onFailure = { "Sync failed: ${it.message}" }
                                 )
                             }
                         },

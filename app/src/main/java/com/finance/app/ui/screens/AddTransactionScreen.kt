@@ -130,7 +130,7 @@ fun AddTransactionScreen(
                 ) {
                     categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text("${'$'}{categoryIconToEmoji(category.icon)} ${'$'}{category.name}") },
+                            text = { Text("${categoryIconToEmoji(category.icon)} ${category.name}") },
                             onClick = {
                                 selectedCategory = category.name
                                 expandedCategory = false

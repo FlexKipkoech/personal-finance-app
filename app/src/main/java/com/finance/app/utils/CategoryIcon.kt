@@ -15,11 +15,11 @@ fun categoryIconToEmoji(rawIcon: String): String {
         "bag" -> "🛍️"
         "clapper" -> "🎬"
         "bulb" -> "💡"
-        "med" -> "🩺"
+        "med" -> "⚕️"
         "books" -> "📚"
         "plane" -> "✈️"
-        "care" -> "🧴"
-        "cash" -> "💵"
+        "care" -> "💅"
+        "cash" -> "💸"
 
         else -> rawIcon
     }
